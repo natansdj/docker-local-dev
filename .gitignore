@@ -1,2 +1,5 @@
 .idea
 docker-compose.yml
+
+backup
+!/backup/hrm_sixmurs.sql
