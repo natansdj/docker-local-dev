@@ -9,6 +9,7 @@ services:
       MYSQL_DATABASE: vti-sixmurs-int
     volumes:
 #      - wordpress-db:/var/lib/mysql
+#      - /home/mysql/db:/var/lib/mysql
       - /mnt/sda1/mysql/db:/var/lib/mysql
     volumes_from:
       - storage
@@ -23,17 +24,29 @@ services:
       MYSQL_DATABASE: vti-sixmurs-int
     volumes:
 #      - wordpress-db:/var/lib/mysql
+#      - /home/mysql56/db:/var/lib/mysql
       - /mnt/sda1/mysql56/db:/var/lib/mysql
     volumes_from:
       - storage
     ports:
       - "3307:3306"
 
+  # postgres:
+  #   image: postgres:9-alpine
+  #   container_name: dev_postgres
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - /home/lxc/postgres/data:/var/lib/postgres
+  #   environment:
+  #     POSTGRES_PASSWORD: root
+
   adminer:
     image: hardware/adminer
     container_name: dev_adminer
     links:
       - mariadb:mariadb
+      # - postgres:postgres
       - mysql:mysql
     ports:
       - "8888:8888"
@@ -48,12 +61,15 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - //var/run/docker.sock:/tmp/docker.sock:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./docker/nginx-proxy/00-custom.conf:/etc/nginx/conf.d/00-custom.conf:ro
     restart: always
 
   storage:
     build:
       context: docker/storage/
+    image: dev_storage
+    container_name: dev_storage
     volumes:
       - ./backup/:/storage:ro
 
