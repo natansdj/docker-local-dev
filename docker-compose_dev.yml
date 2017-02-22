@@ -6,13 +6,12 @@ services:
     container_name: dev_mariadb
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: vti-sixmurs-int
+      MYSQL_DATABASE: wordpress
     volumes:
-#      - wordpress-db:/var/lib/mysql
-#      - /home/mysql/db:/var/lib/mysql
-      - /mnt/sda1/mysql/db:/var/lib/mysql
-    volumes_from:
-      - storage
+      # - wordpress-db:/var/lib/mysql
+      # - /home/mysql/db:/var/lib/mysql
+      # - /mnt/sda1/mysql/db:/var/lib/mysql
+      - storage:/storage
     ports:
       - "3306:3306"
 
@@ -21,13 +20,12 @@ services:
     container_name: dev_mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: vti-sixmurs-int
+      MYSQL_DATABASE: wordpress
     volumes:
-#      - wordpress-db:/var/lib/mysql
-#      - /home/mysql56/db:/var/lib/mysql
-      - /mnt/sda1/mysql56/db:/var/lib/mysql
-    volumes_from:
-      - storage
+      # - wordpress-db:/var/lib/mysql
+      # - /home/mysql56/db:/var/lib/mysql
+      # - /mnt/sda1/mysql56/db:/var/lib/mysql
+      - storage:/storage
     ports:
       - "3307:3306"
 
@@ -47,7 +45,7 @@ services:
     links:
       - mariadb:mariadb
       # - postgres:postgres
-      - mysql:mysql
+      # - mysql:mysql
     ports:
       - "8888:8888"
     environment:
@@ -65,17 +63,22 @@ services:
       - ./docker/nginx-proxy/00-custom.conf:/etc/nginx/conf.d/00-custom.conf:ro
     restart: always
 
-  storage:
-    build:
-      context: docker/storage/
-    image: dev_storage
-    container_name: dev_storage
-    volumes:
-      - ./backup/:/storage:ro
+  # storage:
+  #   build:
+  #     context: docker/storage/
+  #   image: dev_storage
+  #   container_name: dev_storage
+  #   volumes:
+  #     - ./backup/:/storage:ro
 
 volumes:
   wordpress-db:
     driver: local
+  storage:
+    driver: local
+    driver_opts:
+      device: /home/vt745/Documents/dev/backup
+      o: bind
 
 networks:
   default:
