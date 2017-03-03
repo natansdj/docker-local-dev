@@ -63,17 +63,7 @@ services:
       - ./docker/nginx-proxy/00-custom.conf:/etc/nginx/conf.d/00-custom.conf:ro
     restart: always
 
-  # storage:
-  #   build:
-  #     context: docker/storage/
-  #   image: dev_storage
-  #   container_name: dev_storage
-  #   volumes:
-  #     - ./backup/:/storage:ro
-
 volumes:
-  wordpress-db:
-    driver: local
   storage:
     driver: local
     driver_opts:
