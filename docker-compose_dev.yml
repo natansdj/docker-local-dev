@@ -8,9 +8,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: wordpress
     volumes:
-      # - wordpress-db:/var/lib/mysql
       # - /home/mysql/db:/var/lib/mysql
-      # - /mnt/sda1/mysql/db:/var/lib/mysql
       - storage:/storage
     ports:
       - "3306:3306"
@@ -22,9 +20,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: wordpress
     volumes:
-      # - wordpress-db:/var/lib/mysql
       # - /home/mysql56/db:/var/lib/mysql
-      # - /mnt/sda1/mysql56/db:/var/lib/mysql
       - storage:/storage
     ports:
       - "3307:3306"
@@ -45,7 +41,7 @@ services:
     links:
       - mariadb:mariadb
       # - postgres:postgres
-      # - mysql:mysql
+      - mysql:mysql
     ports:
       - "8888:8888"
     environment:
@@ -61,7 +57,7 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./docker/nginx-proxy/00-custom.conf:/etc/nginx/conf.d/00-custom.conf:ro
-    restart: always
+    restart: unless-stopped
 
 volumes:
   storage:
