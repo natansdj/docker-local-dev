@@ -1,52 +1,88 @@
 version: '2'
 
 services:
-  mariadb:
-    image: mariadb:10.1
-    container_name: dev_mariadb
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: wordpress
-    volumes:
-      # - /home/mysql/db:/var/lib/mysql
-      - storage:/storage
-    ports:
-      - "3306:3306"
+ mariadb:
+   image: mariadb:10.1
+   container_name: dev_mariadb
+   environment:
+     MYSQL_ROOT_PASSWORD: root
+     MYSQL_DATABASE: wordpress
+   volumes:
+     - /home/mysql/db:/var/lib/mysql
+     - storage:/storage
+   ports:
+     - "3306:3306"
+   mem_limit: 1g
+   networks:
+     default:
+       ipv4_address: 172.18.0.4
 
   mysql:
-    image: mysql:5.6
+    image: mysql:5.7
     container_name: dev_mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: wordpress
     volumes:
-      # - /home/mysql56/db:/var/lib/mysql
+      - /home/mysql57/db:/var/lib/mysql
+      - ./docker/mysql/57-docker.cnf:/etc/mysql/conf.d/docker.cnf
       - storage:/storage
     ports:
       - "3307:3306"
+    restart: always
+    mem_limit: 1g
+    networks:
+      default:
+        ipv4_address: 172.18.0.5
 
-  # postgres:
-  #   image: postgres:9-alpine
-  #   container_name: dev_postgres
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - /home/lxc/postgres/data:/var/lib/postgres
-  #   environment:
-  #     POSTGRES_PASSWORD: root
+  mysql56:
+    image: mysql:5.6
+    container_name: dev_mysql56
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: dev
+    volumes:
+      - /home/mysql56/db:/var/lib/mysql
+      - ./docker/mysql/56-docker.cnf:/etc/mysql/conf.d/docker.cnf
+      - storage:/storage
+    ports:
+      - "3308:3306"
+    restart: always
+    mem_limit: 2g
+    networks:
+      default:
+        ipv4_address: 172.18.0.6
+
+#   postgres:
+#     image: postgres:9-alpine
+#     container_name: dev_postgres
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - /home/lxc/postgres/data:/var/lib/postgres
+#     environment:
+#       POSTGRES_PASSWORD: root
 
   adminer:
     image: hardware/adminer
     container_name: dev_adminer
     links:
       - mariadb:mariadb
-      # - postgres:postgres
       - mysql:mysql
+      - mysql56:mysql56
+#      - postgres:postgres
     ports:
       - "8888:8888"
     environment:
       VIRTUAL_HOST: "adminer.vm"
       VIRTUAL_PORT: "80"
+    restart: always
+    mem_limit: 100m
+#    depends_on:
+#     - mysql56
+    networks:
+      default:
+        ipv4_address: 172.18.0.3
 
   nginx-proxy:
     image: jwilder/nginx-proxy:latest
@@ -57,7 +93,11 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./docker/nginx-proxy/00-custom.conf:/etc/nginx/conf.d/00-custom.conf:ro
-    restart: unless-stopped
+    restart: always
+    mem_limit: 100m
+    networks:
+      default:
+        ipv4_address: 172.18.0.2
 
 volumes:
   storage:
