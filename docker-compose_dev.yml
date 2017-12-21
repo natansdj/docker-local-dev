@@ -88,7 +88,7 @@ services:
       default:
         ipv4_address: 172.18.0.3
 
-  nginx-proxy:
+  proxy:
     image: jwilder/nginx-proxy:latest
     container_name: dev_proxy
     ports:
@@ -98,6 +98,8 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./docker/nginx-proxy/00-custom.conf:/etc/nginx/conf.d/00-custom.conf:ro
     restart: always
+#    environment:
+#      DEFAULT_HOST: "mailhog.vm"
     mem_limit: 100m
     networks:
       default:
@@ -107,6 +109,8 @@ services:
   mail:
     image: mailhog/mailhog
     container_name: dev_mailhog
+    volumes:
+      - storage:/storage
     ports:
       - 1025:1025
       - 25:1025
@@ -117,6 +121,8 @@ services:
     environment:
       - VIRTUAL_HOST=mailhog.vm
       - VIRTUAL_PORT=8025
+      - MH_STORAGE=maildir
+      - MH_MAILDIR_PATH=/storage/mailhog/mail/
     mem_limit: 100m
 
   #######################################
