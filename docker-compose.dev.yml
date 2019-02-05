@@ -62,6 +62,10 @@ services:
 #       - /home/lxc/postgres/data:/var/lib/postgres
 #     environment:
 #       POSTGRES_PASSWORD: root
+#    mem_limit: 1g
+#    networks:
+#      default:
+#        ipv4_address: 172.18.0.7
 
   adminer:
     image: hardware/adminer
@@ -84,7 +88,7 @@ services:
       default:
         ipv4_address: 172.18.0.3
 
-  nginx-proxy:
+  proxy:
     image: jwilder/nginx-proxy:latest
     container_name: dev_proxy
     ports:
@@ -94,10 +98,65 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./docker/nginx-proxy/00-custom.conf:/etc/nginx/conf.d/00-custom.conf:ro
     restart: always
+#    environment:
+#      DEFAULT_HOST: "mailhog.vm"
     mem_limit: 100m
     networks:
       default:
         ipv4_address: 172.18.0.2
+
+  # Mailhog
+  mail:
+    image: mailhog/mailhog
+    container_name: dev_mailhog
+    volumes:
+      - storage:/storage
+    ports:
+      - 1025:1025
+      - 25:1025
+      - 8025:8025
+    networks:
+      default:
+        ipv4_address: 172.18.0.15
+    environment:
+      - VIRTUAL_HOST=mailhog.vm
+      - VIRTUAL_PORT=8025
+      - MH_STORAGE=maildir
+      - MH_MAILDIR_PATH=/storage/mailhog/mail/
+    mem_limit: 100m
+
+  #######################################
+  # Elasticsearch
+  #######################################
+  elastic:
+#    build:
+#      context: docker/elasticsearch/
+#    image: docker.elastic.co/elasticsearch/elasticsearch
+    image: elasticsearch:1.7
+    container_name: dev_elastic
+    ports:
+      - 9200:9200
+      - 19200:9200
+      - 19300:9300
+    volumes:
+      - storage:/storage
+      - ./backup/elasticsearch/data/:/usr/share/elasticsearch/data
+      - ./backup/elasticsearch/config/:/usr/share/elasticsearch/config
+      - ./backup/elasticsearch/plugins/:/usr/share/elasticsearch/plugins
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 2g
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - VIRTUAL_HOST=elastic.dev.vm
+      - VIRTUAL_PORT=9200
+    networks:
+      default:
+        ipv4_address: 172.18.0.100
 
 volumes:
   storage:
