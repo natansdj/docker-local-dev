@@ -1,0 +1,176 @@
+version: '2'
+
+services:
+  # mariadb:
+  #   image: mariadb:10.1
+  #   container_name: dev_mariadb
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root
+  #     MYSQL_DATABASE: wordpress
+  #   volumes:
+  #     - /home/mysql/db:/var/lib/mysql
+  #     - storage:/storage
+  #   ports:
+  #     - "3306:3306"
+  #   mem_limit: 1g
+  #   networks:
+  #     default:
+  #       ipv4_address: 172.18.0.4
+
+  mysql:
+    image: mysql:5.7
+    container_name: dev_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wordpress
+    volumes:
+      - /home/mysql57/db:/var/lib/mysql
+      - ./docker/mysql/57-docker.cnf:/etc/mysql/conf.d/docker.cnf
+      - storage:/storage
+    ports:
+      - "3307:3306"
+#    restart: always
+    mem_limit: 1g
+    networks:
+      default:
+        ipv4_address: 172.18.0.5
+
+#  mysql56:
+#    image: mysql:5.6
+#    container_name: dev_mysql56
+#    environment:
+#      MYSQL_ROOT_PASSWORD: root
+#      MYSQL_DATABASE: dev
+#    volumes:
+#      - /home/mysql56/db:/var/lib/mysql
+#      - ./docker/mysql/56-docker.cnf:/etc/mysql/conf.d/docker.cnf
+#      - storage:/storage
+#    ports:
+#      - "3308:3306"
+#    #restart: always
+#    mem_limit: 2g
+#    networks:
+#      default:
+#        ipv4_address: 172.18.0.6
+
+#   postgres:
+#     image: postgres:9-alpine
+#     container_name: dev_postgres
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - /home/lxc/postgres/data:/var/lib/postgres
+#     environment:
+#       POSTGRES_PASSWORD: root
+#    mem_limit: 1g
+#    networks:
+#      default:
+#        ipv4_address: 172.18.0.7
+
+  adminer:
+    image: hardware/adminer
+    container_name: dev_adminer
+    links:
+      #- mariadb:mariadb
+      - mysql:mysql
+      #- mysql56:mysql56
+      #- postgres:postgres
+    ports:
+      - "8888:8888"
+    environment:
+      VIRTUAL_HOST: "adminer.vm"
+      VIRTUAL_PORT: "80"
+#    restart: always
+    mem_limit: 100m
+#    depends_on:
+#      - mysql56
+    networks:
+      default:
+        ipv4_address: 172.18.0.3
+
+  proxy:
+    image: jwilder/nginx-proxy:latest
+    container_name: dev_proxy
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+#      - ./docker/nginx-proxy/certs:/etc/nginx/certs:ro
+#      - /etc/nginx/vhost.d
+#      - /usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./docker/nginx-proxy/00-custom.conf:/etc/nginx/conf.d/00-custom.conf:ro
+#    restart: always
+#    environment:
+#      DEFAULT_HOST: "mailhog.vm"
+    mem_limit: 100m
+    networks:
+      default:
+        ipv4_address: 172.18.0.2
+
+  # Mailhog
+#  mail:
+#    image: mailhog/mailhog
+#    container_name: dev_mailhog
+#    volumes:
+#      - storage:/storage
+#    ports:
+#      - 1025:1025
+#      - 25:1025
+#      - 8025:8025
+#    restart: always
+#    networks:
+#      default:
+#        ipv4_address: 172.18.0.15
+#    environment:
+#      - VIRTUAL_HOST=mailhog.vm
+#      - VIRTUAL_PORT=8025
+#      - MH_STORAGE=maildir
+#      - MH_MAILDIR_PATH=/storage/mailhog/mail/
+#    mem_limit: 100m
+
+  #######################################
+  # Elasticsearch
+  #######################################
+#  elastic:
+##    build:
+##      context: docker/elasticsearch/
+##    image: docker.elastic.co/elasticsearch/elasticsearch
+#    image: elasticsearch:1.7
+#    container_name: dev_elastic
+#    ports:
+#      - 9200:9200
+#      - 9300:9300
+#      # - 19200:9200
+#      # - 19300:9300
+#    volumes:
+#      - storage:/storage
+#      - ./backup/elasticsearch/data/:/usr/share/elasticsearch/data
+#      - ./backup/elasticsearch/config/:/usr/share/elasticsearch/config
+#      - ./backup/elasticsearch/plugins/:/usr/share/elasticsearch/plugins
+#    ulimits:
+#      memlock:
+#        soft: -1
+#        hard: -1
+#    mem_limit: 2g
+#    environment:
+#      - cluster.name=docker-cluster
+#      - bootstrap.memory_lock=true
+#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+#      - VIRTUAL_HOST=elastic.dev.vm
+#      - VIRTUAL_PORT=9200
+#    networks:
+#      default:
+#        ipv4_address: 172.18.0.100
+
+volumes:
+  storage:
+    driver: local
+    driver_opts:
+      device: /home/ip310/Documents/dev/backup
+      o: bind
+
+networks:
+  default:
+    external:
+      name: dev
