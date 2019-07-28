@@ -162,6 +162,7 @@ volumes:
   storage:
     driver: local
     driver_opts:
+      type: bind
       device: /home/vt745/Documents/dev/backup
       o: bind
 

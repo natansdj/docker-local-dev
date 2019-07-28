@@ -166,7 +166,8 @@ volumes:
   storage:
     driver: local
     driver_opts:
-      device: /home/ip310/Documents/dev/backup
+      type: bind
+      device: /home/a407/Documents/dev/backup
       o: bind
 
 networks:
