@@ -24,7 +24,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: wordpress
     volumes:
-      - /home/mysql57/db:/var/lib/mysql
+      - mysql57:/var/lib/mysql
       - ./docker/mysql/57-docker.cnf:/etc/mysql/conf.d/docker.cnf
       - storage:/storage
     ports:
@@ -66,6 +66,20 @@ services:
 #    networks:
 #      default:
 #        ipv4_address: 172.18.0.7
+
+  ### MongoDB Container #######################################
+#  mongo:
+##    image: mongo:4.0-xenial
+#    build: ./docker/mongo
+#    container_name: dev_mongo
+#    ports:
+#      - "${MONGODB_PORT}:27017"
+#    volumes:
+#      - ${DATA_SAVE_PATH}/mongo:/data/db
+#    mem_limit: 1g
+#    networks:
+#      default:
+#        ipv4_address: 172.18.0.8
 
   adminer:
     image: hardware/adminer
@@ -109,25 +123,39 @@ services:
         ipv4_address: 172.18.0.2
 
   # Mailhog
-#  mail:
-#    image: mailhog/mailhog
-#    container_name: dev_mailhog
-#    volumes:
-#      - storage:/storage
-#    ports:
-#      - 1025:1025
-#      - 25:1025
-#      - 8025:8025
-#    restart: always
-#    networks:
-#      default:
-#        ipv4_address: 172.18.0.15
-#    environment:
-#      - VIRTUAL_HOST=mailhog.vm
-#      - VIRTUAL_PORT=8025
-#      - MH_STORAGE=maildir
-#      - MH_MAILDIR_PATH=/storage/mailhog/mail/
-#    mem_limit: 100m
+  mail:
+    image: mailhog/mailhog
+    container_name: dev_mailhog
+    volumes:
+      - storage:/storage
+    ports:
+      - 1025:1025
+      - 25:1025
+      - 8025:8025
+    # restart: always
+    networks:
+      default:
+        ipv4_address: 172.18.0.15
+    environment:
+    - VIRTUAL_HOST=mailhog.vm
+    - VIRTUAL_PORT=8025
+    - MH_STORAGE=maildir
+    - MH_HOSTNAME=mailhog.vm
+    - MH_MAILDIR_PATH=/storage/mailhog/mail/
+    mem_limit: 100m
+
+  html:
+    image: jojomi/lighttpd-static:latest
+    container_name: dev_html
+    volumes:
+      - ../_htdocs/dev_html:/var/www:ro
+    mem_limit: 100m
+    networks:
+      default:
+        ipv4_address: 172.18.0.16
+    environment:
+      VIRTUAL_HOST: "html.vm"
+      VIRTUAL_PORT: "80"
 
   #######################################
   # Elasticsearch
@@ -164,6 +192,12 @@ services:
 #        ipv4_address: 172.18.0.100
 
 volumes:
+  mysql57:
+    driver: local
+    driver_opts:
+      type: bind
+      device: /home/lxc/mysql57/db
+      o: bind
   storage:
     driver: local
     driver_opts:
