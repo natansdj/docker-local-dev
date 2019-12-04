@@ -68,18 +68,22 @@ services:
 #        ipv4_address: 172.18.0.7
 
   ### MongoDB Container #######################################
-#  mongo:
-##    image: mongo:4.0-xenial
-#    build: ./docker/mongo
-#    container_name: dev_mongo
-#    ports:
-#      - "${MONGODB_PORT}:27017"
-#    volumes:
-#      - ${DATA_SAVE_PATH}/mongo:/data/db
-#    mem_limit: 1g
-#    networks:
-#      default:
-#        ipv4_address: 172.18.0.8
+  mongo:
+    image: mongo:4.0-xenial
+    # build: ./docker/mongo
+    container_name: dev_mongo
+    volumes:
+      - mongodb:/data/db
+    # ports:
+      # - "27017:27017"
+    # restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    mem_limit: 1g
+    networks:
+      default:
+        ipv4_address: 172.18.0.8
 
   adminer:
     image: hardware/adminer
@@ -197,6 +201,12 @@ volumes:
     driver_opts:
       type: bind
       device: /home/lxc/mysql57/db
+      o: bind
+  mongodb:
+    driver: local
+    driver_opts:
+      type: bind
+      device: /home/lxc/mongodb
       o: bind
   storage:
     driver: local
