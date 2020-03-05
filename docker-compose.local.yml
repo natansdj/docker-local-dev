@@ -1,4 +1,4 @@
-version: '2'
+version: '2.1'
 
 services:
   # mariadb:
@@ -29,7 +29,7 @@ services:
       - storage:/storage
     ports:
       - "3307:3306"
-#    restart: always
+#    restart: always  # unless-stopped
     mem_limit: 1g
     networks:
       default:
@@ -83,7 +83,7 @@ services:
     mem_limit: 1g
     networks:
       default:
-        ipv4_address: 172.18.0.8
+        ipv4_address: 172.18.0.18
 
   adminer:
     image: hardware/adminer
@@ -118,6 +118,7 @@ services:
 #      - /usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./docker/nginx-proxy/00-custom.conf:/etc/nginx/conf.d/00-custom.conf:ro
+#      - ./docker/nginx-proxy/01-ddc.conf:/etc/nginx/conf.d/01-ddc.conf:ro
 #    restart: always
 #    environment:
 #      DEFAULT_HOST: "mailhog.vm"
@@ -146,7 +147,7 @@ services:
     - MH_STORAGE=maildir
     - MH_HOSTNAME=mailhog.vm
     - MH_MAILDIR_PATH=/storage/mailhog/mail/
-    mem_limit: 100m
+    mem_limit: 300m
 
   html:
     image: jojomi/lighttpd-static:latest
