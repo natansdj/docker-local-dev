@@ -119,7 +119,8 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./docker/nginx-proxy/00-custom.conf:/etc/nginx/conf.d/00-custom.conf:ro
 #      - ./docker/nginx-proxy/01-ddc.conf:/etc/nginx/conf.d/01-ddc.conf:ro
-#    restart: always
+      - ./docker/nginx-proxy/01-ddc-api.conf:/etc/nginx/conf.d/01-ddc-api.conf:ro
+    restart: unless-stopped
 #    environment:
 #      DEFAULT_HOST: "mailhog.vm"
     mem_limit: 100m
