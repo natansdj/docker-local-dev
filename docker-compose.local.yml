@@ -118,7 +118,7 @@ services:
 #      - /usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./docker/nginx-proxy/00-custom.conf:/etc/nginx/conf.d/00-custom.conf:ro
-#      - ./docker/nginx-proxy/01-ddc.conf:/etc/nginx/conf.d/01-ddc.conf:ro
+#      - ./docker/nginx-proxy/01-ddc.conf:/etc/nginx/conf.d/02-ddc.conf:ro
       - ./docker/nginx-proxy/01-ddc-api.conf:/etc/nginx/conf.d/01-ddc-api.conf:ro
     restart: unless-stopped
 #    environment:
@@ -150,17 +150,35 @@ services:
     - MH_MAILDIR_PATH=/storage/mailhog/mail/
     mem_limit: 300m
 
-  html:
-    image: jojomi/lighttpd-static:latest
-    container_name: dev_html
+  # html:
+  #   image: jojomi/lighttpd-static:latest
+  #   container_name: dev_html
+  #   volumes:
+  #     - ../_htdocs/dev_html:/var/www:ro
+  #   mem_limit: 100m
+  #   networks:
+  #     default:
+  #       ipv4_address: 172.18.0.16
+  #   environment:
+  #     VIRTUAL_HOST: "html.vm"
+  #     VIRTUAL_PORT: "80"
+
+  #######################################
+  # Redis
+  #######################################
+  redis:
+    image: redis:alpine
+    container_name: dev_redis
+    networks:
+      - default
     volumes:
-      - ../_htdocs/dev_html:/var/www:ro
-    mem_limit: 100m
+      - redis:/data
+    mem_limit: 300m
     networks:
       default:
-        ipv4_address: 172.18.0.16
+        ipv4_address: 172.18.0.17
     environment:
-      VIRTUAL_HOST: "html.vm"
+      VIRTUAL_HOST: "redis.vm"
       VIRTUAL_PORT: "80"
 
   #######################################
@@ -214,7 +232,13 @@ volumes:
     driver: local
     driver_opts:
       type: bind
-      device: /home/a407/Documents/dev/backup
+      device: /home/nath/Documents/dev/backup
+      o: bind
+  redis:
+    driver: local
+    driver_opts:
+      type: bind
+      device: /home/lxc/redis_dev
       o: bind
 
 networks:
