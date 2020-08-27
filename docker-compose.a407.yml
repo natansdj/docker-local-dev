@@ -116,6 +116,9 @@ services:
       # - postgres:postgres
     volumes:
       - ./docker/adminer/plugins-enabled/designs.php:/var/www/html/plugins-enabled/designs.php
+    extra_hosts:
+      - "a407:172.18.0.1"
+      - "t490s:192.168.43.160"
     ports:
       - "8080:8080"
     environment:
