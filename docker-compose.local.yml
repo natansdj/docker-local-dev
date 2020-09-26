@@ -1,35 +1,36 @@
 version: '2.1'
 
 services:
-  # mariadb:
-  #   image: mariadb:10.1
-  #   container_name: dev_mariadb
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: root
-  #     MYSQL_DATABASE: wordpress
-  #   volumes:
-  #     - /home/mysql/db:/var/lib/mysql
-  #     - storage:/storage
-  #   ports:
-  #     - "3306:3306"
-  #   mem_limit: 1g
-  #   networks:
-  #     default:
-  #       ipv4_address: 172.18.0.4
+  mariadb:
+    image: mariadb:10.3.17
+    container_name: dev_mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: dev_mariadb
+    volumes:
+      - mariadb:/var/lib/mysql
+      - storage:/storage
+    ports:
+      - "13306:3306"
+    restart: unless-stopped
+    mem_limit: 1g
+    networks:
+      default:
+        ipv4_address: 172.18.0.4
 
   mysql:
     image: mysql:5.7
     container_name: dev_mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: wordpress
+      MYSQL_DATABASE: dev_mysql
     volumes:
       - mysql57:/var/lib/mysql
       - ./docker/mysql/57-docker.cnf:/etc/mysql/conf.d/docker.cnf
       - storage:/storage
     ports:
       - "3307:3306"
-#    restart: always  # unless-stopped
+    restart: unless-stopped
     mem_limit: 1g
     networks:
       default:
@@ -67,41 +68,62 @@ services:
 #      default:
 #        ipv4_address: 172.18.0.7
 
-  ### MongoDB Container #######################################
-  mongo:
-    image: mongo:4.0-xenial
-    # build: ./docker/mongo
-    container_name: dev_mongo
-    volumes:
-      - mongodb:/data/db
-    # ports:
-      # - "27017:27017"
-    # restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root
-    mem_limit: 1g
+  #######################################
+  # Redis
+  #######################################
+  redis:
+    image: redis:alpine
+    container_name: dev_redis
     networks:
       default:
-        ipv4_address: 172.18.0.18
+        ipv4_address: 172.18.0.17
+    volumes:
+      - redis:/data
+    ports:
+      - "6379:6379"
+    mem_limit: 200m
+    restart: unless-stopped
+    environment:
+      VIRTUAL_HOST: "redis.vm"
+      VIRTUAL_PORT: "80"
+
+  ### MongoDB Container #######################################
+  # mongo:
+  #   image: mongo:4.0-xenial
+  #   # build: ./docker/mongo
+  #   container_name: dev_mongo
+  #   volumes:
+  #     - mongodb:/data/db
+  #   # ports:
+  #     # - "27017:27017"
+  #   # restart: unless-stopped
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: root
+  #     MONGO_INITDB_ROOT_PASSWORD: root
+  #   mem_limit: 1g
+  #   networks:
+  #     default:
+  #       ipv4_address: 172.18.0.18
 
   adminer:
-    image: hardware/adminer
+    image: adminer
     container_name: dev_adminer
-    links:
-      #- mariadb:mariadb
-      - mysql:mysql
-      #- mysql56:mysql56
-      #- postgres:postgres
+    # links:
+    #   - mariadb:mariadb
+    #   - mysql:mysql
+      # - mongodb:mongodb
+      # - postgres:postgres
+    volumes:
+      - ./docker/adminer/plugins-enabled/designs.php:/var/www/html/plugins-enabled/designs.php
     ports:
-      - "8888:8888"
+      - "8080:8080"
     environment:
       VIRTUAL_HOST: "adminer.vm"
-      VIRTUAL_PORT: "80"
-#    restart: always
+      VIRTUAL_PORT: "8080"
+      ADMINER_DEFAULT_SERVER: "mariadb"
+      ADMINER_DESIGN: "pepa-linha"
+      ADMINER_PLUGINS: "enum-option json-column"
     mem_limit: 100m
-#    depends_on:
-#      - mysql56
     networks:
       default:
         ipv4_address: 172.18.0.3
@@ -129,26 +151,26 @@ services:
         ipv4_address: 172.18.0.2
 
   # Mailhog
-  mail:
-    image: mailhog/mailhog
-    container_name: dev_mailhog
-    volumes:
-      - storage:/storage
-    ports:
-      - 1025:1025
-      - 25:1025
-      - 8025:8025
-    # restart: always
-    networks:
-      default:
-        ipv4_address: 172.18.0.15
-    environment:
-    - VIRTUAL_HOST=mailhog.vm
-    - VIRTUAL_PORT=8025
-    - MH_STORAGE=maildir
-    - MH_HOSTNAME=mailhog.vm
-    - MH_MAILDIR_PATH=/storage/mailhog/mail/
-    mem_limit: 300m
+  # mail:
+  #   image: mailhog/mailhog
+  #   container_name: dev_mailhog
+  #   volumes:
+  #     - storage:/storage
+  #   ports:
+  #     - 1025:1025
+  #     - 25:1025
+  #     - 8025:8025
+  #   # restart: always
+  #   networks:
+  #     default:
+  #       ipv4_address: 172.18.0.15
+  #   environment:
+  #   - VIRTUAL_HOST=mailhog.vm
+  #   - VIRTUAL_PORT=8025
+  #   - MH_STORAGE=maildir
+  #   - MH_HOSTNAME=mailhog.vm
+  #   - MH_MAILDIR_PATH=/storage/mailhog/mail/
+  #   mem_limit: 300m
 
   # html:
   #   image: jojomi/lighttpd-static:latest
@@ -162,24 +184,6 @@ services:
   #   environment:
   #     VIRTUAL_HOST: "html.vm"
   #     VIRTUAL_PORT: "80"
-
-  #######################################
-  # Redis
-  #######################################
-  redis:
-    image: redis:alpine
-    container_name: dev_redis
-    networks:
-      - default
-    volumes:
-      - redis:/data
-    mem_limit: 300m
-    networks:
-      default:
-        ipv4_address: 172.18.0.17
-    environment:
-      VIRTUAL_HOST: "redis.vm"
-      VIRTUAL_PORT: "80"
 
   #######################################
   # Elasticsearch
@@ -216,18 +220,24 @@ services:
 #        ipv4_address: 172.18.0.100
 
 volumes:
+  mariadb:
+    driver: local
+    driver_opts:
+      type: bind
+      device: /home/lxc/mariadb_dev/db
+      o: bind
   mysql57:
     driver: local
     driver_opts:
       type: bind
       device: /home/lxc/mysql57/db
       o: bind
-  mongodb:
-    driver: local
-    driver_opts:
-      type: bind
-      device: /home/lxc/mongodb
-      o: bind
+  # mongodb:
+  #   driver: local
+  #   driver_opts:
+  #     type: bind
+  #     device: /home/lxc/mongodb
+  #     o: bind
   storage:
     driver: local
     driver_opts:
