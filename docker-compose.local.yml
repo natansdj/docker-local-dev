@@ -30,43 +30,44 @@ services:
       - storage:/storage
     ports:
       - "3307:3306"
+    #    restart: always  # unless-stopped
     restart: unless-stopped
     mem_limit: 1g
     networks:
       default:
         ipv4_address: 172.18.0.5
 
-#  mysql56:
-#    image: mysql:5.6
-#    container_name: dev_mysql56
-#    environment:
-#      MYSQL_ROOT_PASSWORD: root
-#      MYSQL_DATABASE: dev
-#    volumes:
-#      - /home/mysql56/db:/var/lib/mysql
-#      - ./docker/mysql/56-docker.cnf:/etc/mysql/conf.d/docker.cnf
-#      - storage:/storage
-#    ports:
-#      - "3308:3306"
-#    #restart: always
-#    mem_limit: 2g
-#    networks:
-#      default:
-#        ipv4_address: 172.18.0.6
+  #  mysql56:
+  #    image: mysql:5.6
+  #    container_name: dev_mysql56
+  #    environment:
+  #      MYSQL_ROOT_PASSWORD: root
+  #      MYSQL_DATABASE: dev
+  #    volumes:
+  #      - /home/mysql56/db:/var/lib/mysql
+  #      - ./docker/mysql/56-docker.cnf:/etc/mysql/conf.d/docker.cnf
+  #      - storage:/storage
+  #    ports:
+  #      - "3308:3306"
+  #    #restart: always
+  #    mem_limit: 2g
+  #    networks:
+  #      default:
+  #        ipv4_address: 172.18.0.6
 
-#   postgres:
-#     image: postgres:9-alpine
-#     container_name: dev_postgres
-#     ports:
-#       - "5432:5432"
-#     volumes:
-#       - /home/lxc/postgres/data:/var/lib/postgres
-#     environment:
-#       POSTGRES_PASSWORD: root
-#    mem_limit: 1g
-#    networks:
-#      default:
-#        ipv4_address: 172.18.0.7
+  #   postgres:
+  #     image: postgres:9-alpine
+  #     container_name: dev_postgres
+  #     ports:
+  #       - "5432:5432"
+  #     volumes:
+  #       - /home/lxc/postgres/data:/var/lib/postgres
+  #     environment:
+  #       POSTGRES_PASSWORD: root
+  #    mem_limit: 1g
+  #    networks:
+  #      default:
+  #        ipv4_address: 172.18.0.7
 
   #######################################
   # Redis
@@ -76,7 +77,7 @@ services:
     container_name: dev_redis
     networks:
       default:
-        ipv4_address: 172.18.0.17
+        ipv4_address: 172.18.0.9
     volumes:
       - redis:/data
     ports:
@@ -108,13 +109,16 @@ services:
   adminer:
     image: adminer
     container_name: dev_adminer
-    # links:
-    #   - mariadb:mariadb
-    #   - mysql:mysql
+    links:
+      - mariadb:mariadb
+      - mysql:mysql
       # - mongodb:mongodb
       # - postgres:postgres
     volumes:
       - ./docker/adminer/plugins-enabled/designs.php:/var/www/html/plugins-enabled/designs.php
+    extra_hosts:
+      - "a407:172.18.0.1"
+      - "t490s:192.168.43.160"
     ports:
       - "8080:8080"
     environment:
@@ -123,6 +127,7 @@ services:
       ADMINER_DEFAULT_SERVER: "mariadb"
       ADMINER_DESIGN: "pepa-linha"
       ADMINER_PLUGINS: "enum-option json-column"
+    restart: always
     mem_limit: 100m
     networks:
       default:
@@ -135,42 +140,61 @@ services:
       - 80:80
       - 443:443
     volumes:
-#      - ./docker/nginx-proxy/certs:/etc/nginx/certs:ro
-#      - /etc/nginx/vhost.d
-#      - /usr/share/nginx/html
+      - ./docker/nginx-proxy/certs:/etc/nginx/certs:ro
+      - ./docker/nginx-proxy/vhost.d:/etc/nginx/vhost.d
+      - ./docker/nginx-proxy/html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./docker/nginx-proxy/00-custom.conf:/etc/nginx/conf.d/00-custom.conf:ro
-#      - ./docker/nginx-proxy/01-ddc.conf:/etc/nginx/conf.d/02-ddc.conf:ro
-      - ./docker/nginx-proxy/01-ddc-api.conf:/etc/nginx/conf.d/01-ddc-api.conf:ro
+      #      - ./docker/nginx-proxy/01-ddc.conf:/etc/nginx/conf.d/02-ddc.conf:ro
+      # - ./docker/nginx-proxy/01-ddc-api.conf:/etc/nginx/conf.d/01-ddc-api.conf:ro
     restart: unless-stopped
-#    environment:
-#      DEFAULT_HOST: "mailhog.vm"
+    environment:
+      DEFAULT_HOST: "nextcloud.vm"
     mem_limit: 100m
     networks:
       default:
         ipv4_address: 172.18.0.2
 
-  # Mailhog
-  # mail:
-  #   image: mailhog/mailhog
-  #   container_name: dev_mailhog
+  # proxy_encrypt:
+  #   image: jrcs/letsencrypt-nginx-proxy-companion:latest
+  #   container_name: dev_proxy_encrypt
+  #   # volumes_from:
+  #   #   - proxy
   #   volumes:
-  #     - storage:/storage
-  #   ports:
-  #     - 1025:1025
-  #     - 25:1025
-  #     - 8025:8025
-  #   # restart: always
+  #     - ./docker/nginx-proxy/certs:/etc/nginx/certs:rw
+  #     - ./docker/nginx-proxy/vhost.d:/etc/nginx/vhost.d
+  #     - ./docker/nginx-proxy/html:/usr/share/nginx/html
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #   environment:
+  #     NGINX_PROXY_CONTAINER: "dev_proxy"
+  #     DEFAULT_EMAIL: "natansidjabat@gmail.com"
+  #     DEBUG: "true"
+  #   mem_limit: 100m
   #   networks:
   #     default:
-  #       ipv4_address: 172.18.0.15
-  #   environment:
-  #   - VIRTUAL_HOST=mailhog.vm
-  #   - VIRTUAL_PORT=8025
-  #   - MH_STORAGE=maildir
-  #   - MH_HOSTNAME=mailhog.vm
-  #   - MH_MAILDIR_PATH=/storage/mailhog/mail/
-  #   mem_limit: 300m
+  #       ipv4_address: 172.18.0.8
+
+  # Mailhog
+  mail:
+    image: mailhog/mailhog
+    container_name: dev_mailhog
+    volumes:
+      - storage:/storage
+    ports:
+      - 1025:1025
+      - 25:1025
+      - 8025:8025
+    restart: unless-stopped
+    networks:
+      default:
+        ipv4_address: 172.18.0.15
+    environment:
+      - VIRTUAL_HOST=mailhog.vm
+      - VIRTUAL_PORT=8025
+      - MH_STORAGE=maildir
+      - MH_HOSTNAME=mailhog.vm
+      - MH_MAILDIR_PATH=/storage/mailhog/mail/
+    mem_limit: 300m
 
   # html:
   #   image: jojomi/lighttpd-static:latest
@@ -220,6 +244,9 @@ services:
 #        ipv4_address: 172.18.0.100
 
 volumes:
+  certs:
+  vhost.d:
+  html:
   mariadb:
     driver: local
     driver_opts:
@@ -242,7 +269,7 @@ volumes:
     driver: local
     driver_opts:
       type: bind
-      device: /home/nath/Documents/dev/backup
+      device: /home/a407/Documents/dev/backup
       o: bind
   redis:
     driver: local
