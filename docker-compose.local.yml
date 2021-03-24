@@ -68,6 +68,21 @@ services:
 #      default:
 #        ipv4_address: 172.18.0.7
 
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2017-latest
+    container_name: dev_mssql
+    ports:
+      - "1433:1433"
+    volumes:
+      - /home/lxc/mssql:/var/opt/mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=secret@Q123
+    mem_limit: 2g
+    networks:
+      default:
+        ipv4_address: 172.18.0.8
+
   #######################################
   # Redis
   #######################################
